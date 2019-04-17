@@ -44,6 +44,8 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.PluginManager;
+import net.runelite.client.plugins.interfacestyles.InterfaceStylesConfig;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
 
@@ -89,6 +91,12 @@ public class PrayerPlugin extends Plugin
 	PrayerConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(PrayerConfig.class);
+	}
+
+	@Provides
+	InterfaceStylesConfig interfaceStylesConfig(ConfigManager configManager)
+	{
+		return configManager.getConfig(InterfaceStylesConfig.class);
 	}
 
 	@Override

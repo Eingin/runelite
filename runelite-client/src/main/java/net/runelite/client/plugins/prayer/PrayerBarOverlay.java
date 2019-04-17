@@ -28,18 +28,18 @@ package net.runelite.client.plugins.prayer;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import net.runelite.api.Client;
-import net.runelite.api.Perspective;
-import net.runelite.api.Player;
-import net.runelite.api.Point;
-import net.runelite.api.Skill;
+
+import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayPriority;
+import net.runelite.client.util.ImageUtil;
 
 @Singleton
 class PrayerBarOverlay extends Overlay
@@ -55,6 +55,9 @@ class PrayerBarOverlay extends Overlay
 
 	private boolean showingPrayerBar;
 
+	private BufferedImage front;
+	private BufferedImage back;
+
 	@Inject
 	private PrayerBarOverlay(final Client client, final PrayerConfig config, final PrayerPlugin plugin)
 	{
@@ -65,6 +68,9 @@ class PrayerBarOverlay extends Overlay
 		setPosition(OverlayPosition.DYNAMIC);
 		setPriority(OverlayPriority.HIGH);
 		setLayer(OverlayLayer.ABOVE_SCENE);
+
+		front = ImageUtil.getResourceStreamFromClass(this.getClass(), "bar_front.png");
+		back = ImageUtil.getResourceStreamFromClass(this.getClass(), "bar_back.png");
 	}
 
 	@Override
@@ -80,23 +86,29 @@ class PrayerBarOverlay extends Overlay
 		final Point canvasPoint = Perspective.localToCanvas(client, localLocation, client.getPlane(), height);
 
 		// Draw bar
-		final int barX = canvasPoint.getX() - 15;
+		final int barWidth = Math.max(front.getWidth(), back.getWidth());
+		final int barHeight = Math.max(front.getHeight(), back.getHeight());
+		final int barX = canvasPoint.getX() - barWidth / 2;
 		final int barY = canvasPoint.getY();
-		final int barWidth = PRAYER_BAR_SIZE.width;
-		final int barHeight = PRAYER_BAR_SIZE.height;
 		final float ratio = (float) client.getBoostedSkillLevel(Skill.PRAYER) / client.getRealSkillLevel(Skill.PRAYER);
 
 		// Restricted by the width to prevent the bar from being too long while you are boosted above your real prayer level.
-		final int progressFill = (int) Math.ceil(Math.min((barWidth * ratio), barWidth));
+//		final int progressFill = (int) Math.ceil(Math.min((barWidth * ratio), barWidth));
 
-		graphics.setColor(BAR_BG_COLOR);
-		graphics.fillRect(barX, barY, barWidth, barHeight);
-		graphics.setColor(BAR_FILL_COLOR);
-		graphics.fillRect(barX, barY, progressFill, barHeight);
+//		graphics.setColor(BAR_BG_COLOR);
+//		graphics.fillRect(barX, barY, barWidth, barHeight);
+//		graphics.setColor(BAR_FILL_COLOR);
+//		graphics.fillRect(barX, barY, progressFill, barHeight);
+//
+
+		int fontWidth = (int) Math.ceil(Math.min(barWidth * ratio, barWidth));
+		graphics.drawImage(back, barX, barY + barHeight, barX + barWidth, barY, 0, barHeight, barWidth, 0, null);
+		graphics.drawImage(front, barX, barY + barHeight, barX + fontWidth, barY, 0, barHeight, fontWidth, 0, null);
+
 
 		if ((plugin.isPrayersActive() || config.prayerFlickAlwaysOn())
-			&& (config.prayerFlickLocation().equals(PrayerFlickLocation.PRAYER_BAR)
-			|| config.prayerFlickLocation().equals(PrayerFlickLocation.BOTH)))
+				&& (config.prayerFlickLocation().equals(PrayerFlickLocation.PRAYER_BAR)
+				|| config.prayerFlickLocation().equals(PrayerFlickLocation.BOTH)))
 		{
 			double t = plugin.getTickProgress();
 
@@ -105,6 +117,7 @@ class PrayerBarOverlay extends Overlay
 			graphics.setColor(FLICK_HELP_COLOR);
 			graphics.fillRect(barX + xOffset, barY, 1, barHeight);
 		}
+
 
 		return new Dimension(barWidth, barHeight);
 	}
